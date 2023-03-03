@@ -1,0 +1,101 @@
+<html>
+<head>
+</head>
+<body>
+<h1>Web Image Crawler by Leon Zheng</h1>
+
+<h2>How it works</h2>
+<ul>
+	<li>Pressing the submit button on this page will make a POST
+		request to /main</li>
+	<li>That request will contain a form parameter with the url
+		populated in the input box below</li>
+	<li>The ImageFinder servlet will respond to the request with a
+		list of image urls</li>
+	<li>This page contains javascript to send the request and use the
+		response to build a list of images</li>
+</ul>
+
+<h2>Current Features</h2>
+<ul>
+	<li>Support crawling for subpages in the same domain</li>
+	<li>Support multithreading for subpage crawling</li>
+	<li>Check domain's robots.txt file to avoid banning</li>
+</ul>
+
+<h2>Areas to improve</h2>
+<ul>
+	<li>Improve UI to make it user friendly</li>
+	<li>Improve robots.txt - related logic to work on more websites</li>
+	<li>Provide storage option for found images</li>
+	<li>Provide customizable option to limit numbers or layers of subpage</li>
+	<li>Group images by the type or the content</li>
+</ul>
+
+<h2>Tested Pages</h2>
+<ul>
+	<li><a href = https://leonzheng.vercel.app/>https://leonzheng.vercel.app/</a></li>
+	<li><a href = https://www.google.com/>https://www.google.com/</a></li>
+	<li><a href = https://medium.com/>https://medium.com/</a></li>
+</ul>
+
+<div class="content">
+	<div class="input">
+		<form>
+			<input type="text" name="url">
+		</form>
+		<button type="button">Submit!</button>
+	</div>
+	<div class="output">
+		<h2> Found images (Scroll down): </h2>
+		<ul class="results">
+
+		</ul>
+	</div>
+</div>
+<script>
+		var resultList = document.querySelector('ul.results');
+		var urlInput = document.querySelector('input[name=url]')
+
+		apiCallBack = function(xhr, callback) {
+			if (xhr.readyState == XMLHttpRequest.DONE) {
+				if (xhr.status != 200) {
+					let message = xhr.status + ":" + xhr.statusText + ":"
+							+ xhr.responseText;
+					alert(message);
+					throw 'API call returned bad code: ' + xhr.status;
+				}
+				let response = xhr.responseText ? JSON.parse(xhr.responseText)
+						: null;
+				if (callback) {
+					callback(response);
+				}
+			}
+		}
+
+		updateList = function(response) {
+			resultList.innerHTML = '';
+			for (var i = 0; i < response.length; i++) {
+				var img = document.createElement("img");
+				img.width = 200;
+				img.src = response[i];
+				resultList.appendChild(img);
+			}
+		}
+
+		makeApiCall = function(url, method, obj, callback) {
+			let xhr = new XMLHttpRequest();
+			xhr.open(method, url);
+			xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);
+			xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
+		}
+
+		document.querySelector('button').addEventListener("click", function(event) {
+			event.preventDefault();
+			makeApiCall('/main?url=' + urlInput.value, 'POST', null, updateList);
+		});
+	</script>
+
+</body>
+
+</html>
